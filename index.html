@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stable Drum Editor: Neural Drum Sound Generation from MIDI</title>
+    <title>Stable Drum Editor: Deep Learning for Drum Audio Generation</title>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -26,7 +26,7 @@
             line-height: 1.6;
             color: var(--text-color);
             background-color: #f9f9f9;
-            max-width: 1800px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 0 20px;
         }
@@ -100,7 +100,6 @@
         
         .demo-container {
             margin: 30px 0;
-            overflow-x: auto;
         }
         
         .demo-table {
@@ -241,8 +240,8 @@
     <section class="abstract">
         <h2>Abstract</h2>
         <p>
-Current methods for creating drum loop audio in digital music production, such as using one-shot samples or resampling, often demand non-trivial efforts of creators. While recent generative models achieve high fidelity and adhere to text, they lack the specific control needed for such a task. Existing symbolic-to-audio research often focuses on single, tonal instruments, leaving the challenge of polyphonic, percussive drum synthesis unaddressed. We address this gap by introducing ``Break-the-Beat!,'' a model capable of rendering a drum MIDI with the timbre of a reference audio.
-It is built by fine-tuning a pre-trained text-to-audio model with our proposed content encoder and a effective hybrid conditioning mechanism. To enable this, we construct a new dataset of paired target-reference drum audio from existing drum audio datasets. Experiments demonstrate that our model generates high-quality drum audio that follows high-resolution drum MIDI, achieving strong performance across metrics of audio quality, rhythmic alignment, and beat continuity. This offer producers a new, controllable tool for creative production.
+            Current methods for creating drum loop audio in digital music production, such as using one-shot samples or resampling, often demand non-trivial efforts of creators. While recent generative models achieve high fidelity and adhere to text, they lack the specific control needed for such a task. Existing symbolic-to-audio research often focuses on single, tonal instruments, leaving the challenge of polyphonic, percussive drum synthesis unaddressed. We address this gap by introducing ``Break-the-Beat!,'' a model capable of rendering a drum MIDI with the timbre of a reference audio. 
+It is built by fine-tuning a pre-trained text-to-audio model with our proposed content encoder and a effective hybrid conditioning mechanism. To enable this, we construct a new dataset of paired target-reference drum audio from existing drum audio datasets. Experiments demonstrate that our model generates high-quality drum audio that follows high-resolution drum MIDI, achieving strong performance across metrics of audio quality, rhythmic alignment, and beat continuity. This offer producers a new, controllable tool for creative production. 
         </p>
     </section>
 
@@ -251,224 +250,166 @@ It is built by fine-tuning a pre-trained text-to-audio model with our proposed c
         
         <div class="demo-section">
             <h3>1. Drum Kit Style Transfer</h3>
-            <p>Our model can generate drum audio in different kit styles while preserving the original MIDI pattern. Each row represents a MIDI pattern rendered with five different drum kit styles.</p>
+            <p>Our model can generate drum audio in different kit styles while preserving the original MIDI pattern. Listen to the same pattern rendered with five different drum kit styles.</p>
             
             <table class="demo-table">
-                <thead>
-                    <tr>
-                        <th rowspan="2">Info</th>
-                        <th colspan="3">Kit 1</th>
-                        <th colspan="3">Kit 2</th>
-                        <th colspan="3">Kit 3</th>
-                        <th colspan="3">Kit 4</th>
-                        <th colspan="3">Kit 5</th>
-                    </tr>
-                    <tr>
-                        <th>Ground Truth</th>
-                        <th>Fake</th>
-                        <th>Source</th>
-                        <th>Ground Truth</th>
-                        <th>Fake</th>
-                        <th>Source</th>
-                        <th>Ground Truth</th>
-                        <th>Fake</th>
-                        <th>Source</th>
-                        <th>Ground Truth</th>
-                        <th>Fake</th>
-                        <th>Source</th>
-                        <th>Ground Truth</th>
-                        <th>Fake</th>
-                        <th>Source</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="info-cell">
-                            <div>Genre: Hip-Hop</div>
-                            <div>BPM: 93</div>
-                        </td>
-                        <!-- Kit 1 -->
-                        <td>
-                            <audio controls src="assets/audio/kit1/ground_truth1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit1/fake1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit1/source1.wav"></audio>
-                        </td>
-                        <!-- Kit 2 -->
-                        <td>
-                            <audio controls src="assets/audio/kit2/ground_truth1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit2/fake1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit2/source1.wav"></audio>
-                        </td>
-                        <!-- Kit 3 -->
-                        <td>
-                            <audio controls src="assets/audio/kit3/ground_truth1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit3/fake1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit3/source1.wav"></audio>
-                        </td>
-                        <!-- Kit 4 -->
-                        <td>
-                            <audio controls src="assets/audio/kit4/ground_truth1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit4/fake1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit4/source1.wav"></audio>
-                        </td>
-                        <!-- Kit 5 -->
-                        <td>
-                            <audio controls src="assets/audio/kit5/ground_truth1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit5/fake1.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit5/source1.wav"></audio>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="info-cell">
-                            <div>Genre: Rock</div>
-                            <div>BPM: 120</div>
-                        </td>
-                        <!-- Kit 1 -->
-                        <td>
-                            <audio controls src="assets/audio/kit1/ground_truth2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit1/fake2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit1/source2.wav"></audio>
-                        </td>
-                        <!-- Kit 2 -->
-                        <td>
-                            <audio controls src="assets/audio/kit2/ground_truth2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit2/fake2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit2/source2.wav"></audio>
-                        </td>
-                        <!-- Kit 3 -->
-                        <td>
-                            <audio controls src="assets/audio/kit3/ground_truth2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit3/fake2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit3/source2.wav"></audio>
-                        </td>
-                        <!-- Kit 4 -->
-                        <td>
-                            <audio controls src="assets/audio/kit4/ground_truth2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit4/fake2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit4/source2.wav"></audio>
-                        </td>
-                        <!-- Kit 5 -->
-                        <td>
-                            <audio controls src="assets/audio/kit5/ground_truth2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit5/fake2.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit5/source2.wav"></audio>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="info-cell">
-                            <div>Genre: Jazz</div>
-                            <div>BPM: 105</div>
-                        </td>
-                        <!-- Kit 1 -->
-                        <td>
-                            <audio controls src="assets/audio/kit1/ground_truth3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit1/fake3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit1/source3.wav"></audio>
-                        </td>
-                        <!-- Kit 2 -->
-                        <td>
-                            <audio controls src="assets/audio/kit2/ground_truth3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit2/fake3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit2/source3.wav"></audio>
-                        </td>
-                        <!-- Kit 3 -->
-                        <td>
-                            <audio controls src="assets/audio/kit3/ground_truth3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit3/fake3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit3/source3.wav"></audio>
-                        </td>
-                        <!-- Kit 4 -->
-                        <td>
-                            <audio controls src="assets/audio/kit4/ground_truth3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit4/fake3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit4/source3.wav"></audio>
-                        </td>
-                        <!-- Kit 5 -->
-                        <td>
-                            <audio controls src="assets/audio/kit5/ground_truth3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit5/fake3.wav"></audio>
-                        </td>
-                        <td>
-                            <audio controls src="assets/audio/kit5/source3.wav"></audio>
-                        </td>
-                    </tr>
-                </tbody>
+                <tr>
+                    <th rowspan="2">Info</th>
+                    <th>Kit 1</th>
+                    <th>Kit 2</th>
+                    <th>Kit 3</th>
+                    <th>Kit 4</th>
+                    <th>Kit 5</th>
+                </tr>
+                <tr>
+                    <th>Acoustic</th>
+                    <th>Electronic</th>
+                    <th>Hip-Hop</th>
+                    <th>Jazz</th>
+                    <th>Rock</th>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Hip-Hop</div>
+                        <div>BPM: 93</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit1/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit1/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit1/source.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit2/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit2/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit2/source.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit3/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit3/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit3/source.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit4/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit4/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit4/source.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit5/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit5/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit5/source.wav"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 120</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit1/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit1/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit1/source2.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit2/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit2/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit2/source2.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit3/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit3/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit3/source2.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit4/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit4/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit4/source2.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit5/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit5/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit5/source2.wav"></audio>
+                    </td>
+                </tr>
+                <!-- Additional rows can be added as needed -->
             </table>
         </div>
 
         <div class="demo-section">
             <h3>2. Zero-Shot Drum Generation</h3>
             <p>Our model can generate drum patterns for audio clips that don't contain drum sounds.</p>
-            <!-- Next demo section will go here -->
+            <!-- Next demo section table will go here -->
         </div>
 
         <div class="demo-section">
             <h3>3. Temporal Stretching</h3>
             <p>Our model can generate drum sounds at different tempos while maintaining audio quality.</p>
-            <!-- Next demo section will go here -->
+            <!-- Next demo section table will go here -->
+        </div>
+
+        <div class="demo-section">
+            <h3>4. Drum Component Isolation</h3>
+            <p>Our model can generate individual drum sounds from a mixed drum pattern.</p>
+            <!-- Next demo section table will go here -->
         </div>
     </section>
 
+    <section>
+        <h2>Method</h2>
+        <p>
+            Our Stable Drum Editor uses a conditional diffusion model architecture to generate high-quality drum audio from MIDI input. The model consists of three main components:
+        </p>
+        <ul>
+            <li>A MIDI encoder that processes input drum patterns</li>
+            <li>A diffusion model that gradually denoises audio in the latent space</li>
+            <li>An audio decoder that produces high-fidelity drum sounds</li>
+        </ul>
+        <p>
+            The model is trained on a diverse dataset of paired MIDI-audio examples spanning multiple genres and drum kit styles. During inference, we can control various aspects of the generation through conditioning signals.
+        </p>
+    </section>
+
     <footer class="footer">
-        <p>© 2023 Stable Drum Editor Team | <a href="https://github.com/username/stable-drum-editor">GitHub</a></p>
+        <p>© 2023 Stable Drum Editor Team | Code available on <a href="https://github.com/username/stable-drum-editor">GitHub</a></p>
     </footer>
+
+    <script>
+        // 添加任何必要的JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化代码
+            console.log('Demo page loaded');
+            
+            // 可以添加更多交互功能，如批量播放控制等
+        });
+    </script>
 </body>
 </html>
