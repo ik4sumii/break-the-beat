@@ -59,26 +59,54 @@
             margin: 20px 0 10px;
         }
         
-        .authors {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
+        .authors-container {
             margin: 20px 0;
         }
-        
-        .author {
-            padding: 10px;
-            text-align: center;
+
+        .authors-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 10px;
         }
-        
+
+        .author {
+            padding: 5px 10px;
+            text-align: center;
+            min-width: 120px;
+        }
+
         .author-name {
             font-weight: bold;
         }
-        
-        .affiliation {
+
+        .author-name i {
             font-style: italic;
+        }
+
+        .author-name sup {
+            font-size: 0.7em;
+            position: relative;
+            top: -0.5em;
+            font-weight: bold;
+        }
+
+        .affiliations {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0 25px;
+            text-align: center;
+        }
+
+        .affiliation {
+            margin: 2px 0;
             font-size: 0.9rem;
+        }
+
+        .affiliation sup {
+            font-weight: bold;
+            margin-right: 3px;
         }
         
         .banner {
@@ -213,20 +241,60 @@
     <header>
         <h1>Break-the-Beat! Controllable MIDI-to-Drum Audio Synthesis</h1>
         
-        <div class="authors">
+    <div class="authors-container">
+        <div class="authors-row">
             <div class="author">
-                <div class="author-name">Shuyang Li</div>
-                <div class="affiliation">AI Lab</div>
+                <div class="author-name"><i>Shuyang Cui</i><sup>1</sup></div>
             </div>
             <div class="author">
-                <div class="author-name">John Doe</div>
-                <div class="affiliation">University of Music Technology</div>
+                <div class="author-name"><i>Zhi Zhong</i><sup>1</sup></div>
             </div>
             <div class="author">
-                <div class="author-name">Jane Smith</div>
-                <div class="affiliation">Institute of Audio Research</div>
+                <div class="author-name"><i>Qiyu Wu</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Zachary Novack</i><sup>1</sup></div>
+            </div>
+
+        </div>
+        <div class="authors-row">
+            <div class="author">
+                <div class="author-name"><i>Woosung Choi</i><sup>2</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Keisuke Toyama</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Kin Wai Cheuk</i><sup>2</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Junghyun Koo</i><sup>2</sup></div>
+            </div>
+
+        </div>
+        <div class="authors-row">  
+            <div class="author">
+                <div class="author-name"><i>Yukara Ikemiya</i><sup>2</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Christian Simon</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Chihiro Nagashima</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Shusuke Takahashi</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Yuhki Mitsufuji</i><sup>1,2</sup></div>
             </div>
         </div>
+    </div>
+
+    <div class="affiliations">
+    <div class="affiliation"><sup>1</sup>Sony Group Corporation</div>
+    <div class="affiliation"><sup>2</sup>Sony AI</div>
+    </div>
 
         <div class="tags">
             <span class="label label-primary">Neural Synthesizer</span>
