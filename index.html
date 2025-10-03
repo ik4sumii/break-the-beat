@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stable Drum Editor: Deep Learning for Drum Audio Generation</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-bg: #ecf0f1;
+            --dark-bg: #2c3e50;
+            --text-color: #333;
+            --light-text: #fff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f9f9f9;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: var(--light-bg);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin: 30px 0 15px;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 5px;
+        }
+        
+        h3 {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin: 20px 0 10px;
+        }
+        
+        .authors {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .author {
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .author-name {
+            font-weight: bold;
+        }
+        
+        .affiliation {
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        .banner {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .abstract {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            text-align: justify;
+        }
+        
+        .demo-container {
+            margin: 30px 0;
+        }
+        
+        .demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .demo-table th, .demo-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .demo-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .demo-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .demo-table tr:hover {
+            background-color: #e6f7ff;
+        }
+        
+        .info-cell {
+            font-weight: bold;
+            text-align: left;
+        }
+        
+        audio {
+            width: 100%;
+            height: 40px;
+            margin: 5px 0;
+        }
+        
+        .audio-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+            color: var(--primary-color);
+        }
+        
+        .footer {
+            text-align: center;
+            margin: 40px 0;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 900px) {
+            .demo-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            body {
+                padding: 0 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* 音频播放器样式 */
+        audio::-webkit-media-controls-panel {
+            background-color: #f0f0f0;
+        }
+        
+        audio::-webkit-media-controls-play-button {
+            background-color: var(--secondary-color);
+            border-radius: 50%;
+        }
+        
+        .demo-section {
+            margin-bottom: 60px;
+        }
+
+        /* 添加标签样式 */
+        .label {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .label-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .label-accent {
+            background-color: var(--accent-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Stable Drum Editor: Neural Drum Sound Generation from MIDI</h1>
+        
+        <div class="authors">
+            <div class="author">
+                <div class="author-name">Shuyang Li</div>
+                <div class="affiliation">AI Lab</div>
+            </div>
+            <div class="author">
+                <div class="author-name">John Doe</div>
+                <div class="affiliation">University of Music Technology</div>
+            </div>
+            <div class="author">
+                <div class="author-name">Jane Smith</div>
+                <div class="affiliation">Institute of Audio Research</div>
+            </div>
+        </div>
+
+        <div class="tags">
+            <span class="label label-primary">Audio Generation</span>
+            <span class="label label-primary">Diffusion Models</span>
+            <span class="label label-accent">MIDI</span>
+            <span class="label label-accent">Drums</span>
+        </div>
+    </header>
+
+    <img src="banner.jpg" alt="Stable Drum Editor" class="banner">
+
+    <section class="abstract">
+        <h2>Abstract</h2>
+        <p>
+            We present Stable Drum Editor, a novel deep learning framework for generating high-quality drum audio from MIDI sequences. Our model leverages diffusion-based architectures to synthesize realistic drum sounds that match the timing, dynamics, and timbral characteristics specified in the input MIDI data. Unlike previous approaches that rely on sample libraries or traditional synthesis, our model learns the complex acoustic properties of various drum kits directly from data. We demonstrate that our approach can generate diverse drum sounds across different genres and playing styles, with precise timing alignment and natural acoustic characteristics. Experimental results show significant improvements in sound quality, timbre consistency, and temporal accuracy compared to existing methods.
+        </p>
+    </section>
+
+    <section class="demo-container">
+        <h2>Audio Demonstrations</h2>
+        
+        <div class="demo-section">
+            <h3>1. Drum Kit Style Transfer</h3>
+            <p>Our model can generate drum audio in different kit styles while preserving the original MIDI pattern. Listen to the same pattern rendered with five different drum kit styles.</p>
+            
+            <table class="demo-table">
+                <tr>
+                    <th rowspan="2">Info</th>
+                    <th>Kit 1</th>
+                    <th>Kit 2</th>
+                    <th>Kit 3</th>
+                    <th>Kit 4</th>
+                    <th>Kit 5</th>
+                </tr>
+                <tr>
+                    <th>Acoustic</th>
+                    <th>Electronic</th>
+                    <th>Hip-Hop</th>
+                    <th>Jazz</th>
+                    <th>Rock</th>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Hip-Hop</div>
+                        <div>BPM: 93</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit1/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit1/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit1/source.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit2/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit2/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit2/source.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit3/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit3/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit3/source.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit4/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit4/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit4/source.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit5/ground_truth.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit5/fake.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit5/source.wav"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 120</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit1/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit1/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit1/source2.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit2/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit2/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit2/source2.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit3/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit3/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit3/source2.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit4/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit4/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit4/source2.wav"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/kit5/ground_truth2.wav"></audio>
+                        <div class="audio-label">Fake</div>
+                        <audio controls src="assets/audio/kit5/fake2.wav"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/kit5/source2.wav"></audio>
+                    </td>
+                </tr>
+                <!-- Additional rows can be added as needed -->
+            </table>
+        </div>
+
+        <div class="demo-section">
+            <h3>2. Zero-Shot Drum Generation</h3>
+            <p>Our model can generate drum patterns for audio clips that don't contain drum sounds.</p>
+            <!-- Next demo section table will go here -->
+        </div>
+
+        <div class="demo-section">
+            <h3>3. Temporal Stretching</h3>
+            <p>Our model can generate drum sounds at different tempos while maintaining audio quality.</p>
+            <!-- Next demo section table will go here -->
+        </div>
+
+        <div class="demo-section">
+            <h3>4. Drum Component Isolation</h3>
+            <p>Our model can generate individual drum sounds from a mixed drum pattern.</p>
+            <!-- Next demo section table will go here -->
+        </div>
+    </section>
+
+    <section>
+        <h2>Method</h2>
+        <p>
+            Our Stable Drum Editor uses a conditional diffusion model architecture to generate high-quality drum audio from MIDI input. The model consists of three main components:
+        </p>
+        <ul>
+            <li>A MIDI encoder that processes input drum patterns</li>
+            <li>A diffusion model that gradually denoises audio in the latent space</li>
+            <li>An audio decoder that produces high-fidelity drum sounds</li>
+        </ul>
+        <p>
+            The model is trained on a diverse dataset of paired MIDI-audio examples spanning multiple genres and drum kit styles. During inference, we can control various aspects of the generation through conditioning signals.
+        </p>
+    </section>
+
+    <footer class="footer">
+        <p>© 2023 Stable Drum Editor Team | Code available on <a href="https://github.com/username/stable-drum-editor">GitHub</a></p>
+    </footer>
+
+    <script>
+        // 添加任何必要的JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化代码
+            console.log('Demo page loaded');
+            
+            // 可以添加更多交互功能，如批量播放控制等
+        });
+    </script>
+</body>
+</html>
