@@ -242,6 +242,61 @@
             background-color: var(--accent-color);
             color: white;
         }
+
+                /* 按钮样式 */
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: 2px solid;
+            min-width: 140px;
+            text-align: center;
+        }
+
+        .btn-paper {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .btn-paper:hover {
+            background-color: transparent;
+            color: var(--secondary-color);
+        }
+
+        .btn-github {
+            background-color: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .btn-github:hover {
+            background-color: transparent;
+            color: #333;
+        }
+
+        @media (max-width: 600px) {
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                min-width: 200px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -307,6 +362,15 @@
             <span class="label label-primary">Neural Synthesizer</span>
             <span class="label label-primary">MIDI-to-Drum</span>
             <span class="label label-accent">Diffusion Transformer</span>
+        </div>
+        
+        <div class="buttons">
+            <a href="#" class="btn btn-paper" target="_blank">
+                📄 Paper
+            </a>
+            <a href="https://github.com/ik4sumii/break-the-beat" class="btn btn-github" target="_blank">
+                💻 GitHub
+            </a>
         </div>
     </header>
 
@@ -1552,14 +1616,14 @@ It is built by fine-tuning a pre-trained text-to-audio model with our proposed c
         </div>
 
         <div class="demo-section">
-            <h3>3. Temporal Stretching</h3>
-            <p>Our model can generate drum sounds at different tempos while maintaining audio quality.</p>
+            <h3>3. Real World Audio Reference</h3>
+            <p>Our model can generate drum sounds with reference of real world audio samples.</p>
             <!-- Next demo section table will go here -->
         </div>
 
         <div class="demo-section">
-            <h3>4. Drum Component Isolation</h3>
-            <p>Our model can generate individual drum sounds from a mixed drum pattern.</p>
+            <h3>4. Single-instrument Drum Audio Generation</h3>
+            <p>Our model can generate single-instrument drum audio.</p>
             <!-- Next demo section table will go here -->
         </div>
     </section>
