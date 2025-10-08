@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Break-the-Beat! Controllable MIDI-to-Drum Audio Synthesis</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-bg: #ecf0f1;
+            --dark-bg: #2c3e50;
+            --text-color: #333;
+            --light-text: #fff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f9f9f9;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+            background: var(--light-bg);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin: 30px 0 15px;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 5px;
+        }
+        
+        h3 {
+            font-size: 1.4rem;
+            color: var(--primary-color);
+            margin: 20px 0 10px;
+        }
+
+        h4 {
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            margin: 15px 0 10px;
+            font-style: italic;
+        }
+        
+        .authors-container {
+            margin: 20px 0;
+        }
+
+        .authors-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 3px; /* 从10px减小到3px */
+        }
+
+        .author {
+            padding: 2px 10px; /* 将垂直padding从5px减小到2px */
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .author-name {
+            font-weight: bold;
+        }
+
+        .author-name i {
+            font-style: italic;
+        }
+
+        .author-name sup {
+            font-size: 0.7em;
+            position: relative;
+            top: -0.5em;
+            font-weight: bold;
+        }
+
+        .affiliations {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0 25px;
+            text-align: center;
+        }
+
+        .affiliation {
+            margin: 2px 0;
+            font-size: 0.9rem;
+        }
+
+        .affiliation sup {
+            font-weight: bold;
+            margin-right: 3px;
+        }
+        
+        .banner {
+            display: block;
+            max-width: 60%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px auto;
+            object-fit: contain;
+        }
+        
+        .abstract {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            text-align: justify;
+        }
+        
+        .demo-container {
+            margin: 30px 0;
+        }
+        
+        .demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .demo-table th, .demo-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .demo-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .demo-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .demo-table tr:hover {
+            background-color: #e6f7ff;
+        }
+        
+        .info-cell {
+            font-weight: bold;
+            text-align: left;
+        }
+        
+        audio {
+            width: 100%;
+            height: 40px;
+            margin: 5px 0;
+        }
+        
+        .audio-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+            color: var(--primary-color);
+        }
+        
+        .footer {
+            text-align: center;
+            margin: 40px 0;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 900px) {
+            .demo-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            body {
+                padding: 0 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* 音频播放器样式 */
+        audio::-webkit-media-controls-panel {
+            background-color: #f0f0f0;
+        }
+        
+        audio::-webkit-media-controls-play-button {
+            background-color: var(--secondary-color);
+            border-radius: 50%;
+        }
+        
+        .demo-section {
+            margin-bottom: 60px;
+        }
+
+        /* 添加标签样式 */
+        .label {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .label-primary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .label-accent {
+            background-color: var(--accent-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Break-the-Beat! Controllable MIDI-to-Drum Audio Synthesis</h1>
+        
+    <div class="authors-container">
+        <div class="authors-row">
+            <div class="author">
+                <div class="author-name"><i>Shuyang Cui</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Zhi Zhong</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Qiyu Wu</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Zachary Novack</i><sup>1</sup></div>
+            </div>
+
+        </div>
+        <div class="authors-row">
+            <div class="author">
+                <div class="author-name"><i>Woosung Choi</i><sup>2</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Keisuke Toyama</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Kin Wai Cheuk</i><sup>2</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Junghyun Koo</i><sup>2</sup></div>
+            </div>
+
+        </div>
+        <div class="authors-row">  
+            <div class="author">
+                <div class="author-name"><i>Yukara Ikemiya</i><sup>2</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Christian Simon</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Chihiro Nagashima</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Shusuke Takahashi</i><sup>1</sup></div>
+            </div>
+            <div class="author">
+                <div class="author-name"><i>Yuhki Mitsufuji</i><sup>1,2</sup></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="affiliations">
+    <div class="affiliation"><sup>1</sup>Sony Group Corporation</div>
+    <div class="affiliation"><sup>2</sup>Sony AI</div>
+    </div>
+
+        <div class="tags">
+            <span class="label label-primary">Neural Synthesizer</span>
+            <span class="label label-primary">MIDI-to-Drum</span>
+            <span class="label label-accent">Diffusion Transformer</span>
+        </div>
+    </header>
+
+    <img src="assets/fig/break-the-beat.png" alt="Break-the-Beat!" class="banner">
+
+    <section class="abstract">
+        <h2>Abstract</h2>
+        <p>
+            Current methods for creating drum loop audio in digital music production, such as using one-shot samples or resampling, often demand non-trivial efforts of creators. While recent generative models achieve high fidelity and adhere to text, they lack the specific control needed for such a task. Existing symbolic-to-audio research often focuses on single, tonal instruments, leaving the challenge of polyphonic, percussive drum synthesis unaddressed. We address this gap by introducing ``Break-the-Beat!,'' a model capable of rendering a drum MIDI with the timbre of a reference audio. 
+It is built by fine-tuning a pre-trained text-to-audio model with our proposed content encoder and a effective hybrid conditioning mechanism. To enable this, we construct a new dataset of paired target-reference drum audio from existing drum audio datasets. Experiments demonstrate that our model generates high-quality drum audio that follows high-resolution drum MIDI, achieving strong performance across metrics of audio quality, rhythmic alignment, and beat continuity. This offer producers a new, controllable tool for creative production. 
+        </p>
+    </section>
+
+    <section class="demo-container">
+        <h2>Audio Demonstrations</h2>
+        
+        <div class="demo-section">
+            <h3>1. MIDI-to-Drum Audio Synthesis</h3>
+            <p>Our model can synthesis drum audio following the original MIDI pattern. Listen to the same pattern rendered with five different drum kit styles.</p>
+            <h4> MIDI pattern: Fill, Time Signature: 4/4 </h4>
+            <table class="demo-table">
+                <tr>
+                    <th rowspan="2">Info</th>
+                    <th>Kit 1</th>
+                    <th>Kit 2</th>
+                    <th>Kit 3</th>
+                    <th>Kit 4</th>
+                    <th>Kit 5</th>
+                </tr>
+                <tr>
+                    <th>Speed Metal</th>
+                    <th>Alternative (METAL)</th>
+                    <th>Live Fusion</th>
+                    <th>Funk Rock</th>
+                    <th>Ele-Drum</th>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 86</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session1_2_rock_86_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session1_2_rock_86_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session1_2_rock_86_fill_4-4_4__drummer1_session1_196_reggae_78_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session1_2_rock_86_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session1_2_rock_86_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session1_2_rock_86_fill_4-4_34__drummer7_session2_62_soul-motown_148_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session1_2_rock_86_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session1_2_rock_86_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session1_2_rock_86_fill_4-4_37__drummer7_session2_62_soul-motown_148_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session1_2_rock_86_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session1_2_rock_86_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session1_2_rock_86_fill_4-4_43__drummer7_session3_144_soul_105_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session1_2_rock_86_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session1_2_rock_86_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session1_2_rock_86_fill_4-4_55__drummer7_session2_10_rock_95_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Funk Rock</div>
+                        <div>BPM: 92</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_100_funk-rock_92_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_100_funk-rock_92_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_100_funk-rock_92_fill_4-4_4__drummer1_session2_196_rock_115_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_100_funk-rock_92_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_100_funk-rock_92_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_100_funk-rock_92_fill_4-4_34__drummer1_session2_78_punk_144_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_100_funk-rock_92_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_100_funk-rock_92_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_100_funk-rock_92_fill_4-4_37__drummer7_session2_73_funk_100_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_100_funk-rock_92_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_100_funk-rock_92_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_100_funk-rock_92_fill_4-4_43__drummer1_session2_196_rock_115_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_100_funk-rock_92_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_100_funk-rock_92_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_100_funk-rock_92_fill_4-4_55__drummer1_session1_236_rock-halftime_140_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Neworleans Funk</div>
+                        <div>BPM: 93</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session3_88_neworleans-funk_93_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session3_88_neworleans-funk_93_fill_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session3_88_neworleans-funk_93_fill_4-4_4__drummer7_session2_48_rock_135_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session3_88_neworleans-funk_93_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session3_88_neworleans-funk_93_fill_4-4_34-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session3_88_neworleans-funk_93_fill_4-4_34__drummer1_session1_133_funk-fast_125_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session3_88_neworleans-funk_93_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session3_88_neworleans-funk_93_fill_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session3_88_neworleans-funk_93_fill_4-4_37__drummer1_session2_14_country_114_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session3_88_neworleans-funk_93_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session3_88_neworleans-funk_93_fill_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session3_88_neworleans-funk_93_fill_4-4_43__drummer1_session1_16_jazz-funk_116_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session3_88_neworleans-funk_93_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session3_88_neworleans-funk_93_fill_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session3_88_neworleans-funk_93_fill_4-4_55__drummer7_session3_70_neworleans-funk_93_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Funk</div>
+                        <div>BPM: 95</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_121_funk_95_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_121_funk_95_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_121_funk_95_fill_4-4_4__drummer7_session2_10_rock_95_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_121_funk_95_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_121_funk_95_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_121_funk_95_fill_4-4_34__drummer7_session3_34_hiphop_67_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_121_funk_95_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_121_funk_95_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_121_funk_95_fill_4-4_37__drummer1_session1_133_funk-fast_125_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_121_funk_95_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_121_funk_95_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_121_funk_95_fill_4-4_43__drummer1_session2_135_afrocuban-bembe_122_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_121_funk_95_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_121_funk_95_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_121_funk_95_fill_4-4_55__drummer1_session1_218_rock-halftime_140_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Jazz Fusion</div>
+                        <div>BPM: 96</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_120_jazz-fusion_96_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_120_jazz-fusion_96_fill_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_120_jazz-fusion_96_fill_4-4_4__drummer1_session2_198_rock_115_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_120_jazz-fusion_96_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_120_jazz-fusion_96_fill_4-4_34-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_120_jazz-fusion_96_fill_4-4_34__drummer1_session2_100_funk-rock_92_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_120_jazz-fusion_96_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_120_jazz-fusion_96_fill_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_120_jazz-fusion_96_fill_4-4_37__drummer1_session2_57_punk_128_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_120_jazz-fusion_96_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_120_jazz-fusion_96_fill_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_120_jazz-fusion_96_fill_4-4_43__drummer1_session2_25_country_114_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_120_jazz-fusion_96_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_120_jazz-fusion_96_fill_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_120_jazz-fusion_96_fill_4-4_55__drummer1_session2_87_punk_144_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Jazz Funk</div>
+                        <div>BPM: 116</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_17_jazz-funk_116_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_17_jazz-funk_116_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_17_jazz-funk_116_fill_4-4_4__drummer1_session1_147_latin-brazilian-baiao_95_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_17_jazz-funk_116_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_17_jazz-funk_116_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_17_jazz-funk_116_fill_4-4_34__drummer7_session2_120_jazz-fusion_96_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_17_jazz-funk_116_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_17_jazz-funk_116_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_17_jazz-funk_116_fill_4-4_37__drummer1_session2_107_funk-rock_92_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_17_jazz-funk_116_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_17_jazz-funk_116_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_17_jazz-funk_116_fill_4-4_43__drummer7_session3_107_hiphop_70_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_17_jazz-funk_116_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_17_jazz-funk_116_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_17_jazz-funk_116_fill_4-4_55__drummer1_session2_134_afrocuban-bembe_122_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 118</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_16_rock_118_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_16_rock_118_fill_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_16_rock_118_fill_4-4_4__drummer1_session1_17_jazz-funk_116_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_16_rock_118_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_16_rock_118_fill_4-4_34-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_16_rock_118_fill_4-4_34__drummer1_session1_16_jazz-funk_116_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_16_rock_118_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_16_rock_118_fill_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_16_rock_118_fill_4-4_37__drummer7_session2_66_rock_145_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_16_rock_118_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_16_rock_118_fill_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_16_rock_118_fill_4-4_43__drummer7_session2_91_hiphop_75_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_16_rock_118_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_16_rock_118_fill_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_16_rock_118_fill_4-4_55__drummer1_session1_30_latin-samba_116_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Funk Fast</div>
+                        <div>BPM: 125</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_140_funk-fast_125_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_140_funk-fast_125_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_140_funk-fast_125_fill_4-4_4__drummer1_session1_216_rock-halftime_140_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_140_funk-fast_125_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_140_funk-fast_125_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_140_funk-fast_125_fill_4-4_34__drummer1_session1_59_jazz_125_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_140_funk-fast_125_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_140_funk-fast_125_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_121_funk_95_fill_4-4_37__drummer1_session1_133_funk-fast_125_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_140_funk-fast_125_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_140_funk-fast_125_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_121_funk_95_fill_4-4_43__drummer1_session2_135_afrocuban-bembe_122_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_140_funk-fast_125_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_140_funk-fast_125_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_140_funk-fast_125_fill_4-4_55__drummer1_session2_25_country_114_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Punk</div>
+                        <div>BPM: 128</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_38_punk_128_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_38_punk_128_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_38_punk_128_fill_4-4_4__drummer7_session2_58_soul-motown_148_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_38_punk_128_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_38_punk_128_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_38_punk_128_fill_4-4_34__drummer1_session1_157_latin-brazilian-baiao_95_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_38_punk_128_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_38_punk_128_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_38_punk_128_fill_4-4_37__drummer1_session2_149_gospel_120_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_38_punk_128_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_38_punk_128_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_38_punk_128_fill_4-4_43__drummer7_session2_119_jazz-fusion_96_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_38_punk_128_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_38_punk_128_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_38_punk_128_fill_4-4_55__drummer7_session2_73_funk_100_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Funk Purdieshuffle</div>
+                        <div>BPM: 130</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_4__drummer1_session2_144_gospel_120_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_34__drummer1_session2_133_afrocuban-bembe_122_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_37__drummer7_session3_143_soul_105_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_43__drummer7_session2_16_rock_118_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_261_funk-purdieshuffle_130_fill_4-4_55__drummer1_session1_140_funk-fast_125_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock Halftime</div>
+                        <div>BPM: 140</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_203_rock-halftime_140_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_203_rock-halftime_140_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_203_rock-halftime_140_fill_4-4_4__drummer1_session2_133_afrocuban-bembe_122_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_203_rock-halftime_140_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_203_rock-halftime_140_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_203_rock-halftime_140_fill_4-4_34__drummer1_session2_196_rock_115_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_203_rock-halftime_140_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_203_rock-halftime_140_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_203_rock-halftime_140_fill_4-4_37__drummer1_session1_99_neworleans-funk_84_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_203_rock-halftime_140_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_203_rock-halftime_140_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_203_rock-halftime_140_fill_4-4_43__drummer7_session3_88_neworleans-funk_93_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_203_rock-halftime_140_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_203_rock-halftime_140_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_203_rock-halftime_140_fill_4-4_55__drummer7_session2_58_soul-motown_148_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock Halftime</div>
+                        <div>BPM: 140</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_216_rock-halftime_140_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_216_rock-halftime_140_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_216_rock-halftime_140_fill_4-4_4__drummer1_session1_30_latin-samba_116_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_216_rock-halftime_140_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_216_rock-halftime_140_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_216_rock-halftime_140_fill_4-4_34__drummer7_session3_107_hiphop_70_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_216_rock-halftime_140_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_216_rock-halftime_140_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_203_rock-halftime_140_fill_4-4_37__drummer1_session1_99_neworleans-funk_84_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_216_rock-halftime_140_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_216_rock-halftime_140_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_216_rock-halftime_140_fill_4-4_43__drummer1_session1_205_rock-halftime_140_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session1_216_rock-halftime_140_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session1_216_rock-halftime_140_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session1_216_rock-halftime_140_fill_4-4_55__drummer1_session1_31_latin-samba_116_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 145</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_70_rock_145_fill_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_70_rock_145_fill_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_70_rock_145_fill_4-4_4__drummer1_session1_203_rock-halftime_140_fill_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_70_rock_145_fill_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_70_rock_145_fill_4-4_34-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_70_rock_145_fill_4-4_34__drummer7_session2_119_jazz-fusion_96_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_70_rock_145_fill_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_70_rock_145_fill_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_70_rock_145_fill_4-4_37__drummer7_session3_144_soul_105_fill_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_70_rock_145_fill_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_70_rock_145_fill_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_70_rock_145_fill_4-4_43__drummer1_session2_144_gospel_120_fill_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_70_rock_145_fill_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_70_rock_145_fill_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_70_rock_145_fill_4-4_55__drummer1_session2_185_rock_115_fill_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <!-- Additional rows can be added as needed -->
+            </table>
+            <h4> MIDI pattern: Beat, Time Signature: 4/4 </h4>
+            <table class="demo-table">
+                <tr>
+                    <th rowspan="2">Info</th>
+                    <th>Kit 1</th>
+                    <th>Kit 2</th>
+                    <th>Kit 3</th>
+                    <th>Kit 4</th>
+                    <th>Kit 5</th>
+                </tr>
+                <tr>
+                    <th>Speed Metal</th>
+                    <th>Alternative (METAL)</th>
+                    <th>Live Fusion</th>
+                    <th>Funk Rock</th>
+                    <th>Ele-Drum</th>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 75</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_27_rock_75_beat_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_27_rock_75_beat_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_27_rock_75_beat_4-4_4__drummer6_session3_1_rock_90_beat_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_27_rock_75_beat_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_27_rock_75_beat_4-4_34-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_27_rock_75_beat_4-4_34__drummer3_session2_25_hiphop_92_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_27_rock_75_beat_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_27_rock_75_beat_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_27_rock_75_beat_4-4_37__drummer3_session1_15_jazz_120_beat_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_27_rock_75_beat_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_27_rock_75_beat_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_27_rock_75_beat_4-4_43__drummer1_session2_1_latin-chacarera_157_beat_3-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_27_rock_75_beat_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_27_rock_75_beat_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_27_rock_75_beat_4-4_55__drummer3_session1_37_rock_120_beat_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Hiphop</div>
+                        <div>BPM: 92</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session2_25_hiphop_92_beat_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session2_25_hiphop_92_beat_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session2_25_hiphop_92_beat_4-4_4__drummer6_session3_5_rock_180_beat_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session2_25_hiphop_92_beat_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session2_25_hiphop_92_beat_4-4_34-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session2_25_hiphop_92_beat_4-4_34__drummer1_session2_142_gospel_120_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session2_25_hiphop_92_beat_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session2_25_hiphop_92_beat_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session2_25_hiphop_92_beat_4-4_37__drummer7_session1_13_funk_102_beat_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session2_25_hiphop_92_beat_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session2_25_hiphop_92_beat_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session2_25_hiphop_92_beat_4-4_43__drummer7_session2_8_rock_95_beat_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session2_25_hiphop_92_beat_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session2_25_hiphop_92_beat_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session2_25_hiphop_92_beat_4-4_55__drummer5_session1_11_latin-brazilian-sambareggae_96_beat_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 95</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_14_rock_95_beat_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_14_rock_95_beat_4-4_4.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_14_rock_95_beat_4-4_4__drummer3_session1_37_rock_120_beat_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_14_rock_95_beat_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_14_rock_95_beat_4-4_34.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_14_rock_95_beat_4-4_34__drummer7_session2_113_jazz-fusion_96_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_14_rock_95_beat_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_14_rock_95_beat_4-4_37.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_14_rock_95_beat_4-4_37__drummer8_session1_16_afrobeat_90_beat_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_14_rock_95_beat_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_14_rock_95_beat_4-4_43.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_14_rock_95_beat_4-4_43__drummer4_session1_5_latin-brazilian_184_beat_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer7_session2_14_rock_95_beat_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer7_session2_14_rock_95_beat_4-4_55.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer7_session2_14_rock_95_beat_4-4_55__drummer3_session2_25_hiphop_92_beat_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 105</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session1_7_rock_105_beat_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session1_7_rock_105_beat_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session1_7_rock_105_beat_4-4_4__drummer5_session2_17_latin-brazilian-samba_110_beat_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session1_7_rock_105_beat_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session1_7_rock_105_beat_4-4_34-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session1_7_rock_105_beat_4-4_34__drummer7_session2_46_rock_135_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session1_7_rock_105_beat_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session1_7_rock_105_beat_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session1_7_rock_105_beat_4-4_37__drummer5_session2_15_latin-venezuelan-joropo_80_beat_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session1_7_rock_105_beat_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session1_7_rock_105_beat_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session1_7_rock_105_beat_4-4_43__drummer1_session1_126_funk-fast_125_beat_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer3_session1_7_rock_105_beat_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer3_session1_7_rock_105_beat_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer3_session1_7_rock_105_beat_4-4_55__drummer7_session3_11_pop-soft_83_beat_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Funk</div>
+                        <div>BPM: 117</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session3_15_funk_117_beat_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session3_15_funk_117_beat_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session3_15_funk_117_beat_4-4_4__drummer1_session1_2_funk_80_beat_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session3_15_funk_117_beat_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session3_15_funk_117_beat_4-4_34-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session3_15_funk_117_beat_4-4_34__drummer8_session1_18_funk_108_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session3_15_funk_117_beat_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session3_15_funk_117_beat_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session3_15_funk_117_beat_4-4_37__drummer5_session2_22_latin-brazilian-frevo_133_beat_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session3_15_funk_117_beat_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session3_15_funk_117_beat_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session3_15_funk_117_beat_4-4_43__drummer1_session2_62_punk_144_beat_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session3_15_funk_117_beat_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session3_15_funk_117_beat_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session3_15_funk_117_beat_4-4_55__drummer1_session2_62_punk_144_beat_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Gospel</div>
+                        <div>BPM: 120</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_142_gospel_120_beat_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_142_gospel_120_beat_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_142_gospel_120_beat_4-4_4__drummer1_session2_1_latin-chacarera_157_beat_3-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <!-- No Kit 2 available for this pattern -->
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_142_gospel_120_beat_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_142_gospel_120_beat_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_142_gospel_120_beat_4-4_37__drummer6_session3_1_rock_90_beat_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_142_gospel_120_beat_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_142_gospel_120_beat_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_142_gospel_120_beat_4-4_43__drummer1_session1_2_funk_80_beat_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_142_gospel_120_beat_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_142_gospel_120_beat_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_142_gospel_120_beat_4-4_55__drummer1_session1_38_latin-samba_116_beat_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Punk</div>
+                        <div>BPM: 144</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_62_punk_144_beat_4-4_4.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_62_punk_144_beat_4-4_4-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_62_punk_144_beat_4-4_4__drummer1_session3_12_latin-bomba_96_beat_4-4_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_62_punk_144_beat_4-4_34.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_62_punk_144_beat_4-4_34-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_62_punk_144_beat_4-4_34__drummer3_session1_39_jazz_120_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_62_punk_144_beat_4-4_37.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_62_punk_144_beat_4-4_37-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_62_punk_144_beat_4-4_37__drummer1_session3_15_funk_117_beat_4-4_37.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_62_punk_144_beat_4-4_43.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_62_punk_144_beat_4-4_43-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_62_punk_144_beat_4-4_43__drummer5_session2_17_latin-brazilian-samba_110_beat_4-4_43.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/main/real/drummer1_session2_62_punk_144_beat_4-4_55.mp3"></audio>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/main/fake/drummer1_session2_62_punk_144_beat_4-4_55-fake.mp3"></audio>
+                        <div class="audio-label">Source</div>
+                        <audio controls src="assets/audio/main/source/drummer1_session2_62_punk_144_beat_4-4_55__drummer7_session1_13_funk_102_beat_4-4_55.mp3"></audio>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="demo-section">
+            <h3>2. Duration Stretching</h3>
+            <p>Our model can generate drum sounds at different tempos while maintaining audio quality.</p>
+            <!-- Next demo section table will go here -->
+            <table class="demo-table"> 
+                <tr>
+                    <th rowspan="2">Info</th>
+                    <th colspan="4">Duration</th>
+                </tr>
+                <tr>
+                    <th>1.0x (Ground Truth)</th>
+                    <th>0.5x</th>
+                    <th>1.5x</th>
+                    <th>2.0x</th>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 75</div>
+                        <div>Type: Beat</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer7_session2_27_rock_75_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_27_rock_75_beat_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_27_rock_75_beat_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_27_rock_75_beat_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Afrobeat</div>
+                        <div>BPM: 90</div>
+                        <div>Type: Beat</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer8_session1_16_afrobeat_90_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer8_session1_16_afrobeat_90_beat_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer8_session1_16_afrobeat_90_beat_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer8_session1_16_afrobeat_90_beat_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Funk</div>
+                        <div>BPM: 95</div>
+                        <div>Type: Fill</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer1_session1_121_funk_95_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_121_funk_95_fill_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_121_funk_95_fill_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_121_funk_95_fill_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Hiphop</div>
+                        <div>BPM: 100</div>
+                        <div>Type: Fill</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer7_session1_33_hiphop_100_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session1_33_hiphop_100_fill_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session1_33_hiphop_100_fill_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session1_33_hiphop_100_fill_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Jazz-Funk</div>
+                        <div>BPM: 116</div>
+                        <div>Type: Fill</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer1_session1_16_jazz-funk_116_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_16_jazz-funk_116_fill_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_16_jazz-funk_116_fill_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_16_jazz-funk_116_fill_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Latin-Samba</div>
+                        <div>BPM: 116</div>
+                        <div>Type: Fill</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer1_session1_30_latin-samba_116_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_30_latin-samba_116_fill_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_30_latin-samba_116_fill_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_30_latin-samba_116_fill_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Jazz</div>
+                        <div>BPM: 120</div>
+                        <div>Type: Beat</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer3_session1_15_jazz_120_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer3_session1_15_jazz_120_beat_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer3_session1_15_jazz_120_beat_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer3_session1_15_jazz_120_beat_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Funk-Fast</div>
+                        <div>BPM: 125</div>
+                        <div>Type: Fill</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer1_session1_133_funk-fast_125_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_133_funk-fast_125_fill_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_133_funk-fast_125_fill_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer1_session1_133_funk-fast_125_fill_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 135</div>
+                        <div>Type: Fill</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer7_session2_48_rock_135_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_48_rock_135_fill_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_48_rock_135_fill_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_48_rock_135_fill_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 145</div>
+                        <div>Type: Fill</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer7_session2_70_rock_145_fill_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_70_rock_145_fill_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_70_rock_145_fill_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_70_rock_145_fill_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Jazz</div>
+                        <div>BPM: 158</div>
+                        <div>Type: Beat</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer4_session1_2_jazz_158_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">0.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer4_session1_2_jazz_158_beat_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">1.5x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer4_session1_2_jazz_158_beat_4-4_34.wav_5.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">2.0x Speed</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer4_session1_2_jazz_158_beat_4-4_34.wav_6.mp3"></audio>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="demo-section">
+            <h3>3. Temporal Stretching</h3>
+            <p>Our model can generate drum sounds at different tempos while maintaining audio quality.</p>
+            <!-- Next demo section table will go here -->
+        </div>
+
+        <div class="demo-section">
+            <h3>4. Drum Component Isolation</h3>
+            <p>Our model can generate individual drum sounds from a mixed drum pattern.</p>
+            <!-- Next demo section table will go here -->
+        </div>
+    </section>
+
+    <section>
+        <h2>Method</h2>
+        <p>
+            Our Stable Drum Editor uses a conditional diffusion model architecture to generate high-quality drum audio from MIDI input. The model consists of three main components:
+        </p>
+        <ul>
+            <li>A MIDI encoder that processes input drum patterns</li>
+            <li>A diffusion model that gradually denoises audio in the latent space</li>
+            <li>An audio decoder that produces high-fidelity drum sounds</li>
+        </ul>
+        <p>
+            The model is trained on a diverse dataset of paired MIDI-audio examples spanning multiple genres and drum kit styles. During inference, we can control various aspects of the generation through conditioning signals.
+        </p>
+    </section>
+
+    <footer class="footer">
+        <p>© 2023 Stable Drum Editor Team | Code available on <a href="https://github.com/username/stable-drum-editor">GitHub</a></p>
+    </footer>
+
+    <script>
+        // 添加任何必要的JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化代码
+            console.log('Demo page loaded');
+            
+            // 可以添加更多交互功能，如批量播放控制等
+        });
+    </script>
+</body>
+</html>
