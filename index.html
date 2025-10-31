@@ -388,7 +388,7 @@ It is built by fine-tuning a pre-trained text-to-audio model with our proposed c
         <h2>Audio Demonstrations</h2>
         
         <div class="demo-section">
-            <h3>1. MIDI-to-Drum Audio Synthesis</h3>
+            <h3>1. Arrangement MIDI-to-Drum Audio Synthesis</h3>
             <p>Our model can synthesis drum audio following the original MIDI pattern. Listen to the same pattern rendered with five different drum kit styles.</p>
             <h4> MIDI pattern: Fill, Time Signature: 4/4 </h4>
             <table class="demo-table">
@@ -1614,8 +1614,37 @@ It is built by fine-tuning a pre-trained text-to-audio model with our proposed c
             </table>
         </div>
 
+        </section>
+            <div class="demo-section">
+            <h3>3. Tap MIDI-to-Drum Audio Synthesis</h3>
+            <p>Our model can generate drum audio at different tempos while maintaining arrangement.</p>
+            <table class="demo-table"> 
+                <tr>
+                    <th rowspan="1">Info</th>
+                    <th colspan="1">Duration</th>
+                </tr>
+                <tr>
+                    <th>Ground Truth</th>
+                    <th>Synthesized</th>
+                </tr>
+                <tr>
+                    <td class="info-cell">
+                        <div>Genre: Rock</div>
+                        <div>BPM: 75</div>
+                        <div>Type: Beat</div>
+                    </td>
+                    <td>
+                        <div class="audio-label">Ground Truth</div>
+                        <audio controls src="assets/audio/stretch/source/drummer7_session2_27_rock_75_beat_4-4_34.mp3"></audio>
+                    </td>
+                    <td>
+                        <div class="audio-label">Synthesized</div>
+                        <audio controls src="assets/audio/stretch/fake/target_stretch_demo_drummer7_session2_27_rock_75_beat_4-4_34.wav_4.mp3"></audio>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </section>
-
 
     <footer class="footer">
         <p></a></p>
